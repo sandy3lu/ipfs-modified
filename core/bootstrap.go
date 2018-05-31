@@ -55,8 +55,8 @@ type BootstrapConfig struct {
 
 // DefaultBootstrapConfig specifies default sane parameters for bootstrapping.
 var DefaultBootstrapConfig = BootstrapConfig{
-	MinPeerThreshold:  4,
-	Period:            30 * time.Second,
+	MinPeerThreshold:  1,//4, TODO:sandy modified
+	Period:            time.Hour,//30 * time.Second, TODO:sandy modified
 	ConnectionTimeout: (30 * time.Second) / 3, // Perod / 3
 }
 
@@ -94,14 +94,14 @@ func Bootstrap(n *IpfsNode, cfg BootstrapConfig) (io.Closer, error) {
 	proc := periodicproc.Tick(cfg.Period, periodic)
 	proc.Go(periodic) // run one right now.
 
-	// kick off Routing.Bootstrap
-	if n.Routing != nil {
-		ctx := procctx.OnClosingContext(proc)
-		if err := n.Routing.Bootstrap(ctx); err != nil {
-			proc.Close()
-			return nil, err
-		}
-	}
+	// kick off Routing.Bootstrap   TODO:sandy modified
+//	if n.Routing != nil {
+//		ctx := procctx.OnClosingContext(proc)
+//		if err := n.Routing.Bootstrap(ctx); err != nil {
+//			proc.Close()
+//			return nil, err
+//		}
+//	}
 
 	doneWithRound <- struct{}{}
 	close(doneWithRound) // it no longer blocks periodic

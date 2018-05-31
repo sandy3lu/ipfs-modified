@@ -23,6 +23,8 @@ import (
 	uio "github.com/ipfs/go-ipfs/unixfs/io"
 
 	cid "gx/ipfs/QmcZfnkapfECQGcLZaf9B79NRg7cRa9EnZh4LSbkCzwNvY/go-cid"
+	"github.com/ipfs/go-ipfs/pin"
+	b58 "gx/ipfs/QmWFAMPqsEyUX7gDUsRVmMWz59FxSpJ1b2v6bJ1yYzo7jY/go-base58-fast/base58"
 )
 
 func Pin(n *core.IpfsNode, ctx context.Context, paths []string, recursive bool) ([]*cid.Cid, error) {
@@ -89,4 +91,23 @@ func Unpin(n *core.IpfsNode, ctx context.Context, paths []string, recursive bool
 		return nil, err
 	}
 	return unpinned, nil
+}
+
+
+func CheckForTask(ctx context.Context, n *core.IpfsNode){//TODO: sandy modified
+	fmt.Println("[!!!!]receiving AddTask start......")
+	for {
+		select{
+		case l:=<-pin.GetTask():
+			ll:=b58.Encode([]byte(l))
+			key := []string{ll}
+			Pin(n, ctx, key, false)
+			n.Blockstore.PinLock().Unlock()
+			fmt.Println("[!!!!]receive AddTask and pinned", ll)
+		case <-ctx.Done():
+			fmt.Println("[!!!!]receiving AddTask  end ......")
+			return
+		}
+
+	}
 }

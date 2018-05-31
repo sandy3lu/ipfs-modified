@@ -36,6 +36,7 @@ var PinCmd = &cmds.Command{
 		"ls":     listPinCmd,
 		"verify": verifyPinCmd,
 		"update": updatePinCmd,
+		"addDaemon":    addDaemonPinCmd,
 	},
 }
 
@@ -677,4 +678,50 @@ func cidsToStrings(cs []*cid.Cid) []string {
 		out = append(out, c.String())
 	}
 	return out
+}
+
+
+var addDaemonPinCmd = &cmds.Command{
+	Helptext: cmdkit.HelpText{
+		Tagline:          "Pin objects to local storage.",
+		ShortDescription: "Stores an IPFS object(s) from a given path locally to disk.",
+	},
+
+	Arguments: []cmdkit.Argument{
+		//cmdkit.StringArg("ipfs-path", true, true, "Path to object(s) to be pinned.").EnableStdin(),
+	},
+	Options: []cmdkit.Option{
+		//cmdkit.BoolOption("recursive", "r", "Recursively pin the object linked to by the specified object(s).").WithDefault(true),
+		//cmdkit.BoolOption("progress", "Show progress"),
+	},
+	//Type: interface{},
+	Run: func(req cmds.Request, res cmds.Response) {
+		n, err := req.InvocContext().GetNode()
+		if err != nil {
+			res.SetError(err, cmdkit.ErrNormal)
+			return
+		}
+
+		go corerepo.CheckForTask(req.Context(),n)
+		res.SetOutput(true)
+	},
+	Marshalers: cmds.MarshalerMap{
+
+		cmds.Text: func(res cmds.Response) (io.Reader, error) {
+
+
+			out, err := unwrapOutput(res.Output())
+			if err != nil {
+				return nil, err
+			}
+			r, ok := out.(bool)
+			if !ok {
+				return nil, e.TypeErr(r, out)
+			}
+
+			buf := &bytes.Buffer{}
+			fmt.Fprintf(buf, "add daemon %s \n", r)
+			return buf, nil
+		},
+	},
 }

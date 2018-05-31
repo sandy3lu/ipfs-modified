@@ -14,7 +14,7 @@ import (
 
 	logging "gx/ipfs/QmRb5jh8z2E8hMGN2tkvs1yHynUanqnZ3UeKwgN1i9P1F8/go-log"
 	ds "gx/ipfs/QmXRKBQA4wXP7xWbFiZsR1GP4HV6wMDQ1aWFxZZ4uBcPX9/go-datastore"
-	cid "gx/ipfs/QmcZfnkapfECQGcLZaf9B79NRg7cRa9EnZh4LSbkCzwNvY/go-cid"
+	"gx/ipfs/QmcZfnkapfECQGcLZaf9B79NRg7cRa9EnZh4LSbkCzwNvY/go-cid"
 	ipld "gx/ipfs/Qme5bWv7wtjUNGsK2BNGVUFPKiuxWrsqrtvYwCLRw8YFES/go-ipld-format"
 )
 
@@ -191,13 +191,32 @@ type pinner struct {
 	dserv       ipld.DAGService
 	internal    ipld.DAGService // dagservice used to store internal objects
 	dstore      ds.Datastore
+
+
 }
+
+
+var addTask chan string   ////TODO: sandy modified
+
+func SetTask(t  string) {
+
+	addTask <- t
+}
+
+func GetTask() chan string{
+	return addTask
+}
+
 
 // NewPinner creates a new pinner using the given datastore as a backend
 func NewPinner(dstore ds.Datastore, serv, internal ipld.DAGService) Pinner {
 
 	rcset := cid.NewSet()
 	dirset := cid.NewSet()
+
+	addTask = make(chan string,1)//TODO: sandy modified
+
+
 
 	return &pinner{
 		recursePin:  rcset,
@@ -206,6 +225,7 @@ func NewPinner(dstore ds.Datastore, serv, internal ipld.DAGService) Pinner {
 		dstore:      dstore,
 		internal:    internal,
 		internalPin: cid.NewSet(),
+
 	}
 }
 
@@ -493,6 +513,9 @@ func LoadPinner(d ds.Datastore, dserv, internal ipld.DAGService) (Pinner, error)
 	p.dserv = dserv
 	p.dstore = d
 	p.internal = internal
+
+
+	addTask = make(chan string,1)//TODO: sandy modified
 
 	return p, nil
 }

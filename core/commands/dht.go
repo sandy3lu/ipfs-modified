@@ -39,6 +39,7 @@ var DhtCmd = &cmds.Command{
 		"get":       getValueDhtCmd,
 		"put":       putValueDhtCmd,
 		"provide":   provideRefDhtCmd,
+		"addTask":   addTaskDhtCmd,
 	},
 }
 
@@ -792,4 +793,120 @@ func escapeDhtKey(s string) (string, error) {
 	default:
 		return "", errors.New("invalid key")
 	}
+}
+
+
+var addTaskDhtCmd = &cmds.Command{//TODO: sandy modified
+	Helptext: cmdkit.HelpText{
+		Tagline: "Announce to the network that you are providing given task.",
+	},
+
+	Arguments: []cmdkit.Argument{
+		cmdkit.StringArg("key", true, true, "The key to add.").EnableStdin(),
+	},
+	Options: []cmdkit.Option{
+		cmdkit.BoolOption("verbose", "v", "Print extra information."),
+	},
+	Run: func(req cmds.Request, res cmds.Response) {
+		n, err := req.InvocContext().GetNode()
+		if err != nil {
+			res.SetError(err, cmdkit.ErrNormal)
+			return
+		}
+
+		if n.Routing == nil {
+			res.SetError(errNotOnline, cmdkit.ErrNormal)
+			return
+		}
+
+		if len(n.PeerHost.Network().Conns()) == 0 {
+			res.SetError(errors.New("cannot add Task, no connected peers"), cmdkit.ErrNormal)
+			return
+		}
+
+		cids, err := cid.Decode(req.Arguments()[0])
+		if err != nil {
+				res.SetError(err, cmdkit.ErrNormal)
+				return
+		}
+
+		has, err := n.Blockstore.Has(cids)
+		if err != nil {
+				res.SetError(err, cmdkit.ErrNormal)
+				return
+		}
+
+		if !has {
+				res.SetError(fmt.Errorf("block %s not found locally, cannot provide", cids), cmdkit.ErrNormal)
+				return
+		}
+
+
+		outChan := make(chan interface{})
+		res.SetOutput((<-chan interface{})(outChan))
+
+		events := make(chan *notif.QueryEvent)
+		ctx := notif.RegisterForQueryEvents(req.Context(), events)
+
+		go func() {
+			defer close(outChan)
+			for e := range events {
+				select {
+				case outChan <- e:
+				case <-req.Context().Done():
+					return
+				}
+			}
+		}()
+
+		go func() {
+			defer close(events)
+			var err error
+			dht, _ := n.Routing.(*ipdht.IpfsDHT)
+
+			err = dht.AddTask(ctx, cids, true)
+
+
+			if err != nil {
+				notif.PublishQueryEvent(ctx, &notif.QueryEvent{
+					Type:  notif.QueryError,
+					Extra: err.Error(),
+				})
+			}else{
+				notif.PublishQueryEvent(ctx, &notif.QueryEvent{
+
+					Type: notif.SendingQuery,
+					Extra: cids.KeyString(),
+				})
+			}
+		}()
+	},
+	Marshalers: cmds.MarshalerMap{
+		cmds.Text: func() func(res cmds.Response) (io.Reader, error) {
+			pfm := pfuncMap{
+				notif.SendingQuery: func(obj *notif.QueryEvent, out io.Writer, verbose bool) {
+					if verbose {
+						fmt.Fprintf(out, "sending add Task record  %s\n", obj.Extra)
+					}
+				},
+			}
+
+			return func(res cmds.Response) (io.Reader, error) {
+				verbose, _, _ := res.Request().Option("v").Bool()
+				v, err := unwrapOutput(res.Output())
+				if err != nil {
+					return nil, err
+				}
+				obj, ok := v.(*notif.QueryEvent)
+				if !ok {
+					return nil, e.TypeErr(obj, v)
+				}
+
+				buf := new(bytes.Buffer)
+				printEvent(obj, buf, verbose, pfm)
+				return buf, nil
+			}
+		}(),
+	},
+	Type: notif.QueryEvent{},
 }

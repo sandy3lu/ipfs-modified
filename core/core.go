@@ -333,7 +333,9 @@ func (n *IpfsNode) startLateOnlineServices(ctx context.Context) error {
 
 	go n.Reprovider.Run(reproviderInterval)
 
-	return nil
+
+
+		return nil
 }
 
 func makeAddrsFactory(cfg config.Addresses) (p2pbhost.AddrsFactory, error) {
@@ -514,7 +516,7 @@ func (n *IpfsNode) setupIpnsRepublisher() error {
 		n.IpnsRepub.RecordLifetime = d
 	}
 
-	n.Process().Go(n.IpnsRepub.Run)
+	//n.Process().Go(n.IpnsRepub.Run)   TODO:sandy modified
 
 	return nil
 }

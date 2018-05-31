@@ -7,21 +7,21 @@ import (
 	"os"
 	"strings"
 
-	blockservice "github.com/ipfs/go-ipfs/blockservice"
-	core "github.com/ipfs/go-ipfs/core"
+	"github.com/ipfs/go-ipfs/blockservice"
+	"github.com/ipfs/go-ipfs/core"
 	"github.com/ipfs/go-ipfs/core/coreunix"
 	dag "github.com/ipfs/go-ipfs/merkledag"
 	dagtest "github.com/ipfs/go-ipfs/merkledag/test"
-	mfs "github.com/ipfs/go-ipfs/mfs"
+	"github.com/ipfs/go-ipfs/mfs"
 	ft "github.com/ipfs/go-ipfs/unixfs"
 
-	cmds "gx/ipfs/QmTjNRVt2fvaRFu93keEC7z5M1GS1iH6qZ9227htQioTUY/go-ipfs-cmds"
-	offline "gx/ipfs/QmWM5HhdG5ZQNyHQ5XhMdGmV9CvLpFynQfGpTxN2MEM7Lc/go-ipfs-exchange-offline"
+	"gx/ipfs/QmTjNRVt2fvaRFu93keEC7z5M1GS1iH6qZ9227htQioTUY/go-ipfs-cmds"
+	"gx/ipfs/QmWM5HhdG5ZQNyHQ5XhMdGmV9CvLpFynQfGpTxN2MEM7Lc/go-ipfs-exchange-offline"
 	mh "gx/ipfs/QmZyZDi491cCNTLfAhwcaDii2Kg4pwKRkhqQzURGDvY6ua/go-multihash"
 	bstore "gx/ipfs/QmaG4DZ4JaqEfvPWt5nPPgoTzhc1tr1T3f4Nu9Jpdm8ymY/go-ipfs-blockstore"
-	cmdkit "gx/ipfs/QmceUdzxkimdYsgtX733uNgzf1DLHyBKN6ehGSp85ayppM/go-ipfs-cmdkit"
-	files "gx/ipfs/QmceUdzxkimdYsgtX733uNgzf1DLHyBKN6ehGSp85ayppM/go-ipfs-cmdkit/files"
-	pb "gx/ipfs/QmeWjRodbcZFKe5tMN7poEx3izym6osrLSnTLf9UjJZBbs/pb"
+	"gx/ipfs/QmceUdzxkimdYsgtX733uNgzf1DLHyBKN6ehGSp85ayppM/go-ipfs-cmdkit"
+	"gx/ipfs/QmceUdzxkimdYsgtX733uNgzf1DLHyBKN6ehGSp85ayppM/go-ipfs-cmdkit/files"
+	"gx/ipfs/QmeWjRodbcZFKe5tMN7poEx3izym6osrLSnTLf9UjJZBbs/pb"
 )
 
 // ErrDepthLimitExceeded indicates that the max depth has been exceeded.
@@ -344,6 +344,8 @@ You can now check what blocks have been created by:
 		if err != nil {
 			res.SetError(err, cmdkit.ErrNormal)
 		}
+
+
 	},
 	PostRun: cmds.PostRunMap{
 		cmds.CLI: func(req *cmds.Request, re cmds.ResponseEmitter) cmds.ResponseEmitter {
@@ -420,6 +422,7 @@ You can now check what blocks have been created by:
 								fmt.Fprintf(os.Stdout, "%s\n", output.Hash)
 							} else {
 								fmt.Fprintf(os.Stdout, "added %s %s\n", output.Hash, output.Name)
+
 							}
 
 						} else {
