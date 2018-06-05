@@ -197,7 +197,7 @@ type pinner struct {
 
 
 var addTask chan string   ////TODO: sandy modified
-
+var addTaskResult chan string   ////TODO: sandy modified
 func SetTask(t  string) {
 
 	addTask <- t
@@ -205,6 +205,15 @@ func SetTask(t  string) {
 
 func GetTask() chan string{
 	return addTask
+}
+
+func SetTaskResult(t  string) {
+
+	addTaskResult <- t
+}
+
+func GetTaskResult() chan string{
+	return addTaskResult
 }
 
 
@@ -215,7 +224,7 @@ func NewPinner(dstore ds.Datastore, serv, internal ipld.DAGService) Pinner {
 	dirset := cid.NewSet()
 
 	addTask = make(chan string,1)//TODO: sandy modified
-
+	addTaskResult = make(chan string,1)//TODO: sandy modified
 
 
 	return &pinner{
@@ -516,7 +525,7 @@ func LoadPinner(d ds.Datastore, dserv, internal ipld.DAGService) (Pinner, error)
 
 
 	addTask = make(chan string,1)//TODO: sandy modified
-
+	addTaskResult = make(chan string,1)//TODO: sandy modified
 	return p, nil
 }
 

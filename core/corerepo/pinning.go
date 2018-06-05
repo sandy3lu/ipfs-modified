@@ -101,9 +101,17 @@ func CheckForTask(ctx context.Context, n *core.IpfsNode){//TODO: sandy modified
 		case l:=<-pin.GetTask():
 			ll:=b58.Encode([]byte(l))
 			key := []string{ll}
-			Pin(n, ctx, key, false)
+			_, err:= Pin(n, ctx, key, true)
 			n.Blockstore.PinLock().Unlock()
-			fmt.Println("[!!!!]receive AddTask and pinned", ll)
+			if (err!=nil){
+				fmt.Println("[!!!!]receive AddTask and pinned Err ", err)
+				pin.SetTaskResult("Err")
+			}else {
+				fmt.Println("[!!!!]receive AddTask and pinned Success : ", ll)
+				// broadcast message
+				pin.SetTaskResult("OK" )
+			}
+
 		case <-ctx.Done():
 			fmt.Println("[!!!!]receiving AddTask  end ......")
 			return

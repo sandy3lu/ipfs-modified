@@ -9,17 +9,17 @@ import (
 	"time"
 
 	cmds "github.com/ipfs/go-ipfs/commands"
-	e "github.com/ipfs/go-ipfs/core/commands/e"
+	"github.com/ipfs/go-ipfs/core/commands/e"
 	dag "github.com/ipfs/go-ipfs/merkledag"
-	path "github.com/ipfs/go-ipfs/path"
+	"github.com/ipfs/go-ipfs/path"
 
-	routing "gx/ipfs/QmTiWLZ6Fo5j4KcTVutZJ5KWRRJrbxzmxA4td8NfEdrPh7/go-libp2p-routing"
+	"gx/ipfs/QmTiWLZ6Fo5j4KcTVutZJ5KWRRJrbxzmxA4td8NfEdrPh7/go-libp2p-routing"
 	notif "gx/ipfs/QmTiWLZ6Fo5j4KcTVutZJ5KWRRJrbxzmxA4td8NfEdrPh7/go-libp2p-routing/notifications"
 	b58 "gx/ipfs/QmWFAMPqsEyUX7gDUsRVmMWz59FxSpJ1b2v6bJ1yYzo7jY/go-base58-fast/base58"
 	pstore "gx/ipfs/QmXauCuJzmzapetmC6W4TuDJLL1yFFrVzSHoWv8YdbmnxH/go-libp2p-peerstore"
 	ipdht "gx/ipfs/QmY1y2M1aCcVhy8UuTbZJBvuFbegZm47f9cDAdgxiehQfx/go-libp2p-kad-dht"
-	peer "gx/ipfs/QmZoWKhxUmZ2seW4BzX6fJkNR8hh9PsGModr7q171yq2SS/go-libp2p-peer"
-	cid "gx/ipfs/QmcZfnkapfECQGcLZaf9B79NRg7cRa9EnZh4LSbkCzwNvY/go-cid"
+	"gx/ipfs/QmZoWKhxUmZ2seW4BzX6fJkNR8hh9PsGModr7q171yq2SS/go-libp2p-peer"
+	"gx/ipfs/QmcZfnkapfECQGcLZaf9B79NRg7cRa9EnZh4LSbkCzwNvY/go-cid"
 	"gx/ipfs/QmceUdzxkimdYsgtX733uNgzf1DLHyBKN6ehGSp85ayppM/go-ipfs-cmdkit"
 	ipld "gx/ipfs/Qme5bWv7wtjUNGsK2BNGVUFPKiuxWrsqrtvYwCLRw8YFES/go-ipld-format"
 )
@@ -803,9 +803,12 @@ var addTaskDhtCmd = &cmds.Command{//TODO: sandy modified
 
 	Arguments: []cmdkit.Argument{
 		cmdkit.StringArg("key", true, true, "The key to add.").EnableStdin(),
+
+
 	},
 	Options: []cmdkit.Option{
 		cmdkit.BoolOption("verbose", "v", "Print extra information."),
+		cmdkit.IntOption("num-providers", "n", "The number of providers to find.").WithDefault(3),
 	},
 	Run: func(req cmds.Request, res cmds.Response) {
 		n, err := req.InvocContext().GetNode()
@@ -859,12 +862,26 @@ var addTaskDhtCmd = &cmds.Command{//TODO: sandy modified
 			}
 		}()
 
+		numProviders, _, err := res.Request().Option("num-providers").Int()
+		if err != nil {
+			res.SetError(err, cmdkit.ErrNormal)
+			return
+		}
+		if numProviders < 1 {
+			res.SetError(fmt.Errorf("number of providers must be greater than 0"), cmdkit.ErrNormal)
+			return
+		}
+
+		if numProviders>3 {
+			numProviders =3
+		}
+
 		go func() {
 			defer close(events)
 			var err error
 			dht, _ := n.Routing.(*ipdht.IpfsDHT)
 
-			err = dht.AddTask(ctx, cids, true)
+			err = dht.AddTask(ctx, cids, true,numProviders)
 
 
 			if err != nil {
